@@ -2,6 +2,7 @@
 
 package lesson3.task1
 
+import lesson1.task1.sqr
 import kotlin.math.*
 
 /**
@@ -75,7 +76,10 @@ fun digitNumber(n: Int): Int = if (n == 0) 1 else ceil(log10(abs(n) + 0.5)).toIn
  * Найти число Фибоначчи из ряда 1, 1, 2, 3, 5, 8, 13, 21, ... с номером n.
  * Ряд Фибоначчи определён следующим образом: fib(1) = 1, fib(2) = 1, fib(n+2) = fib(n) + fib(n+1)
  */
-fun fib(n: Int): Int = if (n <= 2) 1 else fib(n - 1) + fib(n - 2)
+fun fib(n: Int): Int = when (n) {
+    1 -> 1
+    else -> ((((1+ sqrt(5.0))/2).pow(n) - ((1 -sqrt(5.0))/2).pow(n))/ sqrt(5.0)).toInt()
+}
 
 /**
  * Простая
@@ -159,11 +163,11 @@ fun collatzSteps(x: Int): Int {
     var count = 0
     var k = x
     if (x == 1) return 0
-    do {
-        k = if (x.rem(2) == 0) k / 2
+    while (k != 1) {
+        k = if (k.rem(2) == 0) k / 2
         else k * 3 + 1
         count++
-    } while (k != 1)
+    }
     return count
 }
 
@@ -174,7 +178,19 @@ fun collatzSteps(x: Int): Int {
  * sin(x) = x - x^3 / 3! + x^5 / 5! - x^7 / 7! + ...
  * Нужную точность считать достигнутой, если очередной член ряда меньше eps по модулю
  */
-fun sin(x: Double, eps: Double): Double = TODO()
+fun sin(x: Double, eps: Double): Double {
+    var count = 1
+    var res = x.rem(2 * Math.PI)
+    var equation = res
+    val sin = res
+
+    while (abs(equation) >= eps) {
+        equation = -equation * sin.div((count * 2 + 1) * (count * 2)) * sin
+        count++
+        res += equation
+    }
+    return res
+}
 
 /**
  * Средняя
@@ -183,7 +199,19 @@ fun sin(x: Double, eps: Double): Double = TODO()
  * cos(x) = 1 - x^2 / 2! + x^4 / 4! - x^6 / 6! + ...
  * Нужную точность считать достигнутой, если очередной член ряда меньше eps по модулю
  */
-fun cos(x: Double, eps: Double): Double = TODO()
+fun cos(x: Double, eps: Double): Double {
+    var count = 1
+    var res = 1.0
+    var equation = 1.0
+    val cos = x.rem(2 * Math.PI)
+
+    while (abs(equation) >= eps) {
+        equation = -equation * cos.div((count * 2 - 1) * (count * 2)) * cos
+        count += 1
+        res += equation
+    }
+    return res
+}
 
 /**
  * Средняя
@@ -192,10 +220,16 @@ fun cos(x: Double, eps: Double): Double = TODO()
  *
  * Использовать операции со строками в этой задаче запрещается.
  */
-fun revert(n: Int): Int = when {
-    n == 1 -> 1
-    n < 10 -> 0
-    else -> revert(n / 10)
+fun revert(n: Int): Int {
+    var number = n
+    var result = 0
+
+    while (number > 0) {
+        result = result * 10 + number.rem(10)
+        number = number.div(10)
+    }
+
+    return result
 }
 
 /**
@@ -207,7 +241,7 @@ fun revert(n: Int): Int = when {
  *
  * Использовать операции со строками в этой задаче запрещается.
  */
-fun isPalindrome(n: Int): Boolean = TODO()
+fun isPalindrome(n: Int): Boolean = n == revert(n)
 
 /**
  * Средняя
@@ -217,26 +251,56 @@ fun isPalindrome(n: Int): Boolean = TODO()
  *
  * Использовать операции со строками в этой задаче запрещается.
  */
-fun hasDifferentDigits(n: Int): Boolean = TODO()
+fun hasDifferentDigits(n: Int): Boolean = digitCountInNumber(n, n % 10) != digitNumber(n)
 
 /**
  * Сложная
  *
  * Найти n-ю цифру последовательности из квадратов целых чисел:
- * 149162536496481100121144...
+ * 1491625364 9648110012 1144169...
  * Например, 2-я цифра равна 4, 7-я 5, 12-я 6.
  *
  * Использовать операции со строками в этой задаче запрещается.
  */
-fun squareSequenceDigit(n: Int): Int = TODO()
+fun squareSequenceDigit(n: Int): Int {
+    var currentLength = 0
+    var number = 1
+
+    while (true) {
+        currentLength += digitNumber(sqr(number))
+        if (currentLength >= n)
+            break
+        number++
+    }
+
+    val m = currentLength - n
+    val numberSqr = sqr(number)
+
+    return if (m == 0) numberSqr.rem(10.0.pow(m + 1).toInt()) else
+        numberSqr.rem(10.0.pow(m + 1).toInt()).div(10.0.pow(m).toInt())
+}
 
 /**
  * Сложная
  *
  * Найти n-ю цифру последовательности из чисел Фибоначчи (см. функцию fib выше):
- * 1123581321345589144...
+ * 1123581321 34 55 89 144 233...
  * Например, 2-я цифра равна 1, 9-я 2, 14-я 5.
  *
  * Использовать операции со строками в этой задаче запрещается.
  */
-fun fibSequenceDigit(n: Int): Int = TODO()
+fun fibSequenceDigit(n: Int): Int {
+    var currentLength = 0
+    var number = 1
+    while (true) {
+        currentLength += digitNumber(fib(number))
+        if (currentLength >= n)
+            break
+        number++
+    }
+
+    val m = currentLength - n
+
+    return if (m == 0) fib(number).rem(10.0.pow(m + 1).toInt()) else
+        fib(number).rem(10.0.pow(m + 1).toInt()).div(10.0.pow(m).toInt())
+}
