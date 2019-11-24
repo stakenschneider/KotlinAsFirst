@@ -5,6 +5,7 @@ package lesson2.task2
 import lesson1.task1.sqr
 import kotlin.math.abs
 import java.util.Calendar
+import kotlin.math.sqrt
 
 /**
  * Пример
@@ -54,7 +55,7 @@ fun daysInMonth(month: Int, year: Int): Int {
  * Вернуть true, если утверждение верно
  */
 fun circleInside(x1: Double, y1: Double, r1: Double,
-                 x2: Double, y2: Double, r2: Double): Boolean = (x2 - x1) + (y2 - y1) <= (r2 - r1)
+                 x2: Double, y2: Double, r2: Double): Boolean = sqrt(sqr(x2 - x1) + sqr(y2 - y1)) <= (r2 - r1)
 
 /**
  * Средняя
@@ -66,4 +67,4 @@ fun circleInside(x1: Double, y1: Double, r1: Double,
  * Вернуть true, если кирпич пройдёт
  */
 fun brickPasses(a: Int, b: Int, c: Int, r: Int, s: Int): Boolean =
-        (a <= s || b <= s || c <= s) && (a <= r || b <= r || c <= r)
+        (((a <= r) && ((b <= s) || (c <= s))) || ((b <= r) && ((a <= s) || (c <= s))) || ((c <= r) && ((b <= s) || (a <= s))))
