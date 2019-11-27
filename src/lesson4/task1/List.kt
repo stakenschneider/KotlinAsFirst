@@ -3,12 +3,10 @@
 package lesson4.task1
 
 import lesson1.task1.discriminant
-import lesson1.task1.sqr
 import kotlin.math.ceil
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.sqrt
-
 
 /**
  * Пример
@@ -120,7 +118,7 @@ fun buildSumExample(list: List<Int>) = list.joinToString(separator = " + ", post
  * по формуле abs = sqrt(a1^2 + a2^2 + ... + aN^2).
  * Модуль пустого вектора считать равным 0.0.
  */
-fun abs(v: List<Double>): Double = sqrt(v.map { sqr(it) }.fold(0.0) { res, el -> res + el })
+fun abs(v: List<Double>): Double = sqrt(v.map { it * it }.fold(0.0) { res, el -> res + el })
 
 /**
  * Простая
@@ -138,9 +136,6 @@ fun mean(list: List<Double>): Double = if (list.isEmpty()) 0.0 else list.fold(0.
  * Обратите внимание, что данная функция должна изменять содержание списка list, а не его копии.
  */
 fun center(list: MutableList<Double>): MutableList<Double> {
-//    круче, но возвращает копию листа :(((
-//    if (list.isEmpty()) return mutableListOf()
-//    return list.map { it - mean(list) }.toMutableList()
     if (list.isEmpty()) return mutableListOf()
     val mean = mean(list)
     for (i in 0 until list.size) {
@@ -156,8 +151,8 @@ fun center(list: MutableList<Double>): MutableList<Double> {
  * представленные в виде списков a и b. Скалярное произведение считать по формуле:
  * C = a1b1 + a2b2 + ... + aNbN. Произведение пустых векторов считать равным 0.0.
  */
-fun times(a: List<Double>, b: List<Double>): Double {
-    var sum = 0.0
+fun times(a: List<Int>, b: List<Int>): Int {
+    var sum = 0
     for (i in a.indices) {
         sum += a[i] * b[i]
     }
@@ -172,11 +167,11 @@ fun times(a: List<Double>, b: List<Double>): Double {
  * Коэффициенты многочлена заданы списком p: (p0, p1, p2, p3, ..., pN).
  * Значение пустого многочлена равно 0.0 при любом x.
  */
-fun polynom(p: List<Double>, x: Double): Double {
-    if (p.isEmpty()) return 0.0
+fun polynom(p: List<Int>, x: Int): Int {
+    if (p.isEmpty()) return 0
     var res = p[0]
     for (i in 1 until p.size) {
-        res += p[i] * x.pow(i)
+        res += p[i] * x.toDouble().pow(i).toInt()
     }
     return res
 }
@@ -191,7 +186,7 @@ fun polynom(p: List<Double>, x: Double): Double {
  *
  * Обратите внимание, что данная функция должна изменять содержание списка list, а не его копии.
  */
-fun accumulate(list: MutableList<Double>): MutableList<Double> {
+fun accumulate(list: MutableList<Int>): MutableList<Int> {
     if (list.isNotEmpty())
         for (i in list.size - 1 downTo 1) {
             for (k in 0 until i) {
@@ -229,7 +224,6 @@ fun factorize(n: Int): List<Int> {
  * Множители в результирующей строке должны располагаться по возрастанию.
  */
 fun factorizeToString(n: Int): String = factorize(n).joinToString(separator = "*")
-
 
 /**
  * Средняя
@@ -281,7 +275,17 @@ fun decimal(digits: List<Int>, base: Int): Int {
     for (i in digits.indices) {
         list.add(convertToString(digits[i], base))
     }
-    return Integer.parseInt(list.joinToString(separator = "") + "", base)
+//    лайфхуцкое решение, но для base <= 36(
+//    без него все работает но удалять не хочу
+    if (base <= Character.MAX_RADIX) return Integer.parseInt(list.joinToString(separator = "") + "", base)
+
+    var res = 0
+    val list2 = digits.reversed()
+
+    for (elCount in digits.indices){
+        res += list2[elCount] * base.toDouble().pow(elCount.toDouble()).toInt()
+    }
+    return res
 }
 
 /**
@@ -322,7 +326,6 @@ fun roman(n: Int): String {
     return list.joinToString(separator = "")
 }
 
-
 /**
  * Очень сложная
  *
@@ -345,10 +348,14 @@ fun russian(n: Int): String {
 }
 
 fun getThousand(dig: Int): String {
-    return if (dig.rem(10) == 1) "тысяча"
-    else if (dig in 5..20) "тысячи"
+    return  if (dig in 5..20 || dig.rem(100) in 10..20) "тысяч"
+    else if (dig.rem(10) == 1) "тысяча"
     else if (dig.rem(10) == 2 || dig.rem(10) == 3 || dig.rem(10) == 4) "тысячи"
     else "тысяч"
+}
+
+fun main(args: Array<String>) {
+    print(getThousand( 711))
 }
 
 fun makeHundred(n: Int, fem: Boolean): String {
@@ -357,25 +364,25 @@ fun makeHundred(n: Int, fem: Boolean): String {
     var num = n
     var digit = digitNumber(n)
 
-        if (digit == 3) {
-            res.add(getHundreds(num.div(100)))
-            num = num.rem(100)
-            digit--
-        }
+    if (digit == 3) {
+        res.add(getHundreds(num.div(100)))
+        num = num.rem(100)
+        digit--
+    }
 
-        if (digit == 2 && num < 20 && num >= 10) {
-            res.add(getTeens(num.rem(10)))
-        }
+    if (digit == 2 && num < 20 && num > 10) {
+        res.add(getTeens(num.rem(10)))
+    }
 
-        if (digit == 2 && num >= 20) {
-            res.add(getDecades(num.div(10)))
-            digit--
-            num = num.rem(10)
-        }
+    if ((digit == 2 && num >= 20) || (digit == 2 && num == 10)) {
+        res.add(getDecades(num.div(10)))
+        digit--
+        num = num.rem(10)
+    }
 
-        if (num != 0 && (digit == 1 || (num < 10 && digit == 2))) {
-            res.add(getUnits(num, fem))
-        }
+    if (num != 0 && (digit == 1 || (num < 10 && digit == 2))) {
+        res.add(getUnits(num, fem))
+    }
     return res.joinToString(separator = " ")
 }
 
