@@ -2,6 +2,9 @@
 
 package lesson6.task1
 
+import java.util.*
+import kotlin.math.min
+
 /**
  * Пример
  *
@@ -42,19 +45,17 @@ fun timeSecondsToStr(seconds: Int): String {
 /**
  * Пример: консольный ввод
  */
-fun main(args: Array<String>) {
+fun main() {
     println("Введите время в формате ЧЧ:ММ:СС")
     val line = readLine()
     if (line != null) {
         val seconds = timeStrToSeconds(line)
         if (seconds == -1) {
             println("Введённая строка $line не соответствует формату ЧЧ:ММ:СС")
-        }
-        else {
+        } else {
             println("Прошло секунд с начала суток: $seconds")
         }
-    }
-    else {
+    } else {
         println("Достигнут <конец файла> в процессе чтения строки. Программа прервана")
     }
 }
@@ -95,7 +96,9 @@ fun dateDigitToStr(digital: String): String = TODO()
  * Перевести номер в формат без скобок, пробелов и чёрточек (но с +), например,
  * "+79211234567" или "123456789" для приведённых примеров.
  * Все символы в номере, кроме цифр, пробелов и +-(), считать недопустимыми.
- * При неверном формате вернуть пустую строку
+ * При неверном формате вернуть пустую строку.
+ *
+ * PS: Дополнительные примеры работы функции можно посмотреть в соответствующих тестах.
  */
 fun flattenPhoneNumber(phone: String): String = TODO()
 
@@ -119,7 +122,8 @@ fun bestLongJump(jumps: String): Int = TODO()
  * Здесь + соответствует удачной попытке, % неудачной, - пропущенной.
  * Высота и соответствующие ей попытки разделяются пробелом.
  * Прочитать строку и вернуть максимальную взятую высоту (230 в примере).
- * При нарушении формата входной строки вернуть -1.
+ * При нарушении формата входной строки, а также в случае отсутствия удачных попыток,
+ * вернуть -1.
  */
 fun bestHighJump(jumps: String): Int = TODO()
 
@@ -207,4 +211,87 @@ fun fromRoman(roman: String): Int = TODO()
  * IllegalArgumentException должен бросаться даже если ошибочная команда не была достигнута в ходе выполнения.
  *
  */
-fun computeDeviceCells(cells: Int, commands: String, limit: Int): List<Int> = TODO()
+fun computeDeviceCells(cells: Int, commands: String, limit: Int): List<Int> {
+    var position = cells.div(2)
+    val conveyor = MutableList(cells) { 0 }
+
+    if (!checkSymbol(commands) || !checkBrackets(commands)) {
+        throw IllegalArgumentException()
+    }
+    val dequeCycles = ArrayDeque<Int>()
+
+    var operationsCount = 0
+    var counter = 0
+    while (counter < commands.length && operationsCount != limit) {
+        when (commands[counter]) {
+            '[' -> {
+                if (conveyor[position] == 0) {
+                    var count = 0
+                    while (counter != commands.length) {
+                        counter++
+                        if (commands[counter] == '[') count++
+                        if (commands[counter] == ']') count--
+                        if (count == -1) break
+                    }
+                } else dequeCycles.addFirst(counter)
+            }
+            ']' -> {
+                if (conveyor[position] != 0) {
+                    counter = dequeCycles.peekFirst()
+                } else dequeCycles.removeFirst()
+            }
+
+            '+' -> conveyor[position]++
+            '-' -> conveyor[position]--
+            '>' -> {
+                position++
+                if (position > conveyor.size - 1) throw IllegalStateException()
+            }
+            '<' -> {
+                position--
+                if (position < 0) throw IllegalStateException()
+            }
+            else -> {
+            }
+        }
+        counter++
+        operationsCount++
+    }
+    return conveyor.toList()
+}
+
+/**
+ * Функция, которая проверяет корректность скобок во входной строке команд.
+ *
+ * @param commands строка с командами
+ * @return функция возвращает true, если скобки расставлены верно, false - если это не так
+ */
+fun checkBrackets(commands: String): Boolean {
+    val mStack: Stack<Char> = Stack()
+    for (i in commands.indices) {
+        when (commands[i]) {
+            ']' -> if (!mStack.isEmpty()) {
+                if (mStack.peek() == '[' && commands[i] == ']') {
+                    mStack.pop()
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+            '[' -> {
+                mStack.push(commands[i])
+            }
+        }
+    }
+
+    return mStack.isEmpty()
+}
+
+/**
+ * Функция, которая проверяет корректность символов в строке команд.
+ *
+ * @param commands строка с командами
+ * @return функция возвращает true, если нет посторонних символов, false - если это не так
+ */
+fun checkSymbol(commands: String): Boolean = " ><+-[]".toSet().containsAll(commands.toSet())
