@@ -202,14 +202,44 @@ class Tests {
     fun propagateHandshakes() {
         assertEquals(
                 mapOf(
-                        "Marat" to setOf("Mikhail", "Sveta"),
-                        "Sveta" to setOf("Mikhail"),
-                        "Mikhail" to setOf()
+                        "0" to setOf(),
+                        "2" to setOf("0"),
+                        "1" to setOf("3", "2", "0"),
+                        "3" to setOf("2", "0")
                 ),
                 propagateHandshakes(
                         mapOf(
-                                "Marat" to setOf("Sveta"),
-                                "Sveta" to setOf("Mikhail")
+                                "0" to setOf(),
+                                "2" to setOf("0"),
+                                "1" to setOf("3"),
+                                "3" to setOf("2"))
+                )
+        )
+        assertEquals(
+                mapOf(
+                        "0" to setOf(),
+                        "1" to setOf("3", "0"),
+                        "2" to setOf(),
+                        "3" to setOf("0"),
+                        "4" to setOf("1", "3", "0")
+                ),
+                propagateHandshakes(
+                        mapOf(
+                                "0" to setOf(),
+                                "1" to setOf("3"),
+                                "2" to setOf(),
+                                "3" to setOf("0"),
+                                "4" to setOf("1")
+                        )
+                )
+        )
+        assertEquals(
+                mapOf(
+                        "0" to setOf<String>()
+                ),
+                propagateHandshakes(
+                        mapOf(
+                                "0" to setOf()
                         )
                 )
         )
@@ -264,6 +294,7 @@ class Tests {
     @Test
     @Tag("Normal")
     fun canBuildFrom() {
+        assertTrue(canBuildFrom(listOf('a'), "a"))
         assertFalse(canBuildFrom(emptyList(), "foo"))
         assertTrue(canBuildFrom(listOf('a', 'b', 'o'), "baobab"))
         assertFalse(canBuildFrom(listOf('a', 'm', 'r'), "Marat"))
