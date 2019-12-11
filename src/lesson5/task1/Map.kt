@@ -2,6 +2,8 @@
 
 package lesson5.task1
 
+import java.lang.Integer.max
+
 /**
  * Пример
  *
@@ -71,11 +73,7 @@ fun removeFillerWords(
  *
  * Для заданного текста `text` построить множество встречающихся в нем слов
  */
-fun buildWordSet(text: List<String>): MutableSet<String> {
-    val res = mutableSetOf<String>()
-    for (word in text) res.add(word)
-    return res
-}
+fun buildWordSet(text: List<String>): MutableSet<String> = text.toMutableSet()
 
 /**
  * Средняя
@@ -119,13 +117,13 @@ fun mergePhoneBooks(mapA: Map<String, String>, mapB: Map<String, String>): Map<S
 fun buildGrades(grades: Map<String, Int>): Map<Int, List<String>> {
     val res = mutableMapOf<Int, List<String>>()
 
-    for ((name, grade) in grades) {
+    for ((_, grade) in grades) {
         res[grade] = listOf()
     }
 
-    for ((grade, name) in res) {
+    for ((grade, _) in res) {
         val names = mutableListOf<String>()
-        for ((k, v) in grades) {
+        for ((k, _) in grades) {
             if (grades[k] == grade) {
                 names.add(k)
             }
@@ -202,6 +200,8 @@ fun findCheapestStuff(stuff: Map<String, Pair<String, Double>>, kind: String): S
     var res = ""
     var min = Double.MAX_VALUE
 
+    if (kind.isEmpty()) return ""
+
     for ((name, pair) in stuff) {
         if (pair.first == kind && min > pair.second) {
             min = pair.second
@@ -237,8 +237,8 @@ fun findCheapestStuff(stuff: Map<String, Pair<String, Double>>, kind: String): S
  */
 fun propagateHandshakes(friends: Map<String, Set<String>>): Map<String, Set<String>> {
     val res = mutableMapOf<String, Set<String>>()
-    var allFriends = mutableSetOf<String>()
-    var listSet = mutableListOf<String>()
+    var allFriends: MutableSet<String>
+    var listSet: MutableList<String>
     var newFriends = mutableMapOf<String, Set<String>>()
     newFriends.putAll(friends)
 
@@ -248,7 +248,7 @@ fun propagateHandshakes(friends: Map<String, Set<String>>): Map<String, Set<Stri
         if (listSet.isEmpty()) res[name] = setOfFriend // часный случай
         for (i in 0 until listSet.size) { // по всем элементам листа
             if (friends.containsKey(listSet[i])) { // если friends Map содержит этого человека
-                if (!allFriends.containsAll(newFriends.getValue(listSet[i]) - name)){
+                if (!allFriends.containsAll(newFriends.getValue(listSet[i]) - name)) {
                     res[name] = allFriends.union(newFriends.getValue(listSet[i]) - name) // объединяем множества - свое имя
                     newFriends[name] = allFriends.union(newFriends.getValue(listSet[i]) - name)
                     newFriends = propagateHandshakes(newFriends.toMap()).toMutableMap()
@@ -267,7 +267,6 @@ fun propagateHandshakes(friends: Map<String, Set<String>>): Map<String, Set<Stri
     return res
 }
 
-
 /**
  * Простая
  *
@@ -282,7 +281,7 @@ fun propagateHandshakes(friends: Map<String, Set<String>>): Map<String, Set<Stri
  *   subtractOf(a = mutableMapOf("a" to "z"), mapOf("a" to "z"))
  *     -> a changes to mutableMapOf() aka becomes empty
  */
-fun subtractOf(a: MutableMap<String, String>, b: Map<String, String>): Unit {
+fun subtractOf(a: MutableMap<String, String>, b: Map<String, String>) {
     for ((key, value) in b) {
         if (a.containsKey(key) && a[key] == value) {
             a.remove(key, value)
@@ -309,16 +308,8 @@ fun whoAreInBoth(a: List<String>, b: List<String>): List<String> = a.toSet().int
  * Например:
  *   canBuildFrom(listOf('a', 'b', 'o'), "baobab") -> true
  */
-fun canBuildFrom(chars: List<Char>, word: String): Boolean {
-    if (chars.isEmpty() && word.isEmpty()) return true
-    if (chars.isNotEmpty() && word.isEmpty()) return true
-    var r = chars.toString().toLowerCase().trimStart('[').trimEnd(']')
-    var t = r.toSet()
-    var v = word.toLowerCase().toSet()
-    var q = t.containsAll(v)
-    var e = chars.isNotEmpty()
-    return q && e
-}
+fun canBuildFrom(chars: List<Char>, word: String): Boolean =
+        if (word.isEmpty()) true else chars.joinToString(separator = "").toLowerCase().toSet().containsAll(word.toLowerCase().toSet())
 
 /**
  * Средняя
@@ -333,7 +324,7 @@ fun canBuildFrom(chars: List<Char>, word: String): Boolean {
  *   extractRepeats(listOf("a", "b", "a")) -> mapOf("a" to 2)
  */
 fun extractRepeats(list: List<String>): Map<String, Int> {
-    var res = mutableMapOf<String, Int>()
+    val res = mutableMapOf<String, Int>()
     var count = 1
 
     for (i in list.indices) {
@@ -364,7 +355,8 @@ fun extractRepeats(list: List<String>): Map<String, Int> {
 fun hasAnagrams(words: List<String>): Boolean {
     for (i in words.indices) {
         for (k in i + 1 until words.size) {
-            if (words[i].toLowerCase().toSet().containsAll(words[k].toLowerCase().toSet()) || words[k].toLowerCase().toSet().containsAll(words[i].toLowerCase().toSet()))
+            if ((words[i].toLowerCase().toSet() - words[k].toLowerCase().toSet()).isEmpty() ||
+                    (words[k].toLowerCase().toSet() - words[i].toLowerCase().toSet()).isEmpty())
                 return true
         }
     }
@@ -417,4 +409,37 @@ fun findSumOfTwo(list: List<Int>, number: Int): Pair<Int, Int> {
  *     450
  *   ) -> emptySet()
  */
-fun bagPacking(treasures: Map<String, Pair<Int, Int>>, capacity: Int): Set<String> = TODO()
+fun bagPacking(treasures: Map<String, Pair<Int, Int>>, capacity: Int): Set<String> {
+    val res = mutableSetOf<String>()
+    val wightList = mutableListOf<Int>()
+    val pricesList = mutableListOf<Int>()
+    val treasuresList = mutableListOf<String>()
+
+    val prices = Array(treasures.size + 1) { Array(capacity + 1) { 0 } }
+    var tmp = capacity
+
+    for ((key, value) in treasures) {
+        treasuresList.add(key)
+        wightList.add(value.first)
+        pricesList.add(value.second)
+    }
+
+    for (i in 0 until treasures.size) {
+        for (k in 0..capacity) {
+            if (wightList[i] <= k) {
+                prices[i][k] = max(prices[i][k], prices[i][k - wightList[i]] + pricesList[i])
+            } else {
+                prices[i][k] = prices[i][k]
+            }
+        }
+    }
+
+    for (i in treasures.size downTo 1) {
+        if (prices[i][tmp] != prices[i - 1][tmp]) {
+            res.add(treasuresList[i - 1])
+            tmp -= wightList[i - 1]
+        }
+    }
+
+    return res
+}
