@@ -62,6 +62,7 @@ Basic, Ruby, Swift.
                 countSubstrings("input/substrings_in1.txt", listOf("РАЗНЫЕ", "ные", "Неряшливость", "е", "эволюция")))
         assertEquals(mapOf("Карминовый" to 2, "Некрасивый" to 2, "белоглазый" to 1),
                 countSubstrings("input/substrings_in1.txt", listOf("Карминовый", "Некрасивый", "белоглазый")))
+        assertEquals(mapOf("авввааа" to 1, "Вв" to 3),countSubstrings("input/countSubstrings.txt", listOf("авввааа","Вв")))
     }
 
     @Test
@@ -541,6 +542,41 @@ Basic, Ruby, Swift.
     -14
     ---
       1""")
+
+        test(741131,2,""" 741131 | 2
+-6        370565
+--
+ 14
+-14
+---
+  01
+  -0
+  --
+   11
+  -10
+  ---
+    13
+   -12
+   ---
+     11
+    -10
+    ---
+      1""")
+        test(2737,3475,"""2737 | 3475
+  -0   0
+----
+2737""")
+        test(35263,40599,"""35263 | 40599
+   -0   0
+-----
+35263""")
+        test(121073,6905,"""121073 | 6905
+-6905    17
+-----
+ 52023
+-48335
+------
+  3688""")
         File("temp.txt").delete()
     }
 }
