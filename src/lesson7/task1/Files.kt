@@ -3,7 +3,6 @@
 package lesson7.task1
 
 import java.io.File
-import java.io.File.separator
 import java.lang.Integer.*
 import kotlin.math.pow
 
@@ -59,10 +58,10 @@ fun alignFile(inputName: String, lineLength: Int, outputName: String) {
  */
 fun countSubstrings(inputName: String, substrings: List<String>): Map<String, Int> {
     val testString = File(inputName).readLines().joinToString(separator = "")
-    val res = mutableMapOf<String,Int>()
+    val res = mutableMapOf<String, Int>()
 
-    for (i in substrings.indices){
-        val replaceAllCase2: Int = testString.length - testString.replace(substrings[i], "",true).length
+    for (i in substrings.indices) {
+        val replaceAllCase2: Int = testString.length - testString.replace(substrings[i], "", true).length
         res[substrings[i]] = replaceAllCase2.div(substrings[i].length)
     }
 
@@ -105,7 +104,28 @@ fun sibilants(inputName: String, outputName: String) {
  *
  */
 fun centerFile(inputName: String, outputName: String) {
-    TODO()
+    var max = MIN_VALUE
+
+    for (line in File(inputName).readLines()) {
+        if (line.trim().length > max) {
+            max = line.trim().length
+        }
+    }
+
+    val out = File(outputName).bufferedWriter()
+
+    for (line in File(inputName).readLines()) {
+        var temp = (max - line.trim().length) / 2
+
+        while (temp > 0) {
+            out.write(" ")
+            temp--
+        }
+
+        out.write(line.trim())
+        out.newLine()
+    }
+    out.close()
 }
 
 /**
@@ -223,7 +243,30 @@ fun transliterate(inputName: String, dictionary: Map<Char, String>, outputName: 
  * Обратите внимание: данная функция не имеет возвращаемого значения
  */
 fun chooseLongestChaoticWord(inputName: String, outputName: String) {
-    TODO()
+    val words = mutableListOf<String>()
+    var max = MIN_VALUE
+
+    for (line in File(inputName).readLines()) {
+        val listOfChar = mutableListOf<Char>()
+
+        for (i in line) {
+            if (i.toLowerCase() !in listOfChar) {
+                listOfChar.add(i.toLowerCase())
+            } else {
+                break
+            }
+
+            if (listOfChar.size == line.length) {
+                words.add(line)
+                if (line.length > max) {
+                    max = line.length
+                }
+            }
+        }
+    }
+    val out = File(outputName).bufferedWriter()
+    out.write(words.filter { it.length == max }.toString().removeSurrounding("[", "]"))
+    out.close()
 }
 
 /**
@@ -459,6 +502,9 @@ fun residualStr(a: String, b: Int): String {
 
     val res = a.substring(countOfB, countOfA)
 
+    if (parseInt(a.substring(0, countOfB)) - b < 0)
+        return (parseInt(a) - b * 10.0.pow(countOfA - countOfB+1).toInt()).toString()
+
     if (parseInt(a.substring(0, countOfB)) - b != 0)
         return (parseInt(a) - b * 10.0.pow(countOfA - countOfB).toInt()).toString()
 
@@ -469,73 +515,159 @@ fun residualStr(a: String, b: Int): String {
     return res
 }
 
-fun getResidual(a: String, b: Int, c: Int, d: Int): String {
+// возвращает лист остатков от вычитание
+fun residual(lhv: Int, rhv: Int, deductibleList: MutableList<Int>): MutableList<Int> {
+    var number = lhv.toString()
+    val residualList = mutableListOf<Int>()
+
+    for (i in 0 until deductibleList.size) {
+        var residual = ""
+        residual = try {
+            getResidual(number, deductibleList[i], deductibleList.size - 1, i, deductibleList[i + 1])
+        } catch (e: IndexOutOfBoundsException) {
+            getResidual(number, deductibleList[i], deductibleList.size - 1, i, 0)
+        }
+//        if (i != deductibleList.size-2){
+//            residual = getResidual(number, deductibleList[i], deductibleList.size - 1, i, deductibleList[i+1])
+//        } else {
+//            residual = getResidual(number, deductibleList[i], deductibleList.size - 1, i, 0)
+//        }
+        if (i != deductibleList.size - 1) {
+            residualList.add(parseInt(residual))
+        }
+        number = residualStr(number, deductibleList[i])
+    }
+    residualList.add(lhv.rem(rhv)) //остаток от деления
+//    println("residual$residualList")
+
+    return residualList
+}
+
+/**
+ * @param a оставшееся число
+ * @param b вычитаемое
+ * @param c количество значений в листе вычитаемых
+ * @param d итератор
+ * @param e ded+1
+ * @return возвращает по одному остаток от вычитания
+ **/
+fun getResidual(a: String, b: Int, c: Int, d: Int, e: Int): String {
     var res = "0"
+//    println("number " + a)
+//    println("deductible " + b)
 
     if (c - d == 1) {
         res = a
     } else if (c != d) {
-        if (a.substring(0, 1) == "0") return a.substring(1, b.toString().length + 1)
+        if (a.substring(0, 1) == "0") {
+//            println("getResidual a == 0" + a.substring(1, b.toString().length + 1))
+            return a.substring(1, b.toString().length + 1)
+        }
+
+        if (b == 0 && a.length != e.toString().length) {
+//            println("getResidual b == 0" + a.substring(0, e.toString().length))
+            return a.substring(0, e.toString().length)
+        }
+
         res = a.substring(0, (b * 10).toString().length)
     }
 
+
+
+//    println("getResidual return" + (parseInt(res) - b * 10).toString())
     return (parseInt(res) - b * 10).toString()
 }
 
-fun printDeductible(i: Int, ded: Int, str1: String, div: Int, tab3: Int): String = if (i == 0) { // если это первое вычитаемое то пищем еще и результат от деления
-    "-" + ded.toString() +
-            MutableList(str1.length - ded.toString().length - 1) { " " }.joinToString(separator = "") +
-            div + "\n"
-} else {
-    MutableList(tab3) { " " }.joinToString(separator = "") +
-            "-" +
-            ded + "\n"
-}
+fun printDeductible(i: Int, ded: Int, str1: String, div: Int, tab3: Int, rhv: Int, lhv: Int): String =
+        if (rhv > lhv) {
+            if (lhv.toString().length >= 2){
+                MutableList(lhv.toString().length - 2) { " " }.joinToString(separator = "") +
+                        "-0   " + div + "\n"
+            } else {
+                "-0   $div\n"
+            }
+
+        } else if (i == 0) { // если это первое вычитаемое то пищем еще и результат от деления
+            "-" + ded.toString() +
+                    MutableList(str1.length - ded.toString().length - 1) { " " }.joinToString(separator = "") +
+                    div + "\n"
+        } else {
+            try {
+                MutableList(tab3) { " " }.joinToString(separator = "") +
+                        "-" +
+                        ded + "\n"
+            }catch (e: IllegalArgumentException){
+                MutableList(0) { " " }.joinToString(separator = "") +
+                        "-" +
+                        ded + "\n"
+            }
+
+        }
 
 
-fun printLine(i: Int, tab3: Int, tab2: Int, ded: Int, resid: MutableList<Int>): String = if (i != 0) {
-    MutableList(min(tab3, tab2)) { " " }.joinToString(separator = "") +
-            MutableList(max(ded.toString().length + 1, resid[i - 1].toString().length)) { "-" }.joinToString(separator = "") + "\n"
-} else {
-    MutableList(min(tab3, tab2)) { " " }.joinToString(separator = "") +
-            MutableList(ded.toString().length + 1) { "-" }.joinToString(separator = "") + "\n"
-}
+fun printLine(i: Int, tab3: Int, tab2: Int, ded: Int, resid: MutableList<Int>, rhv: Int, lhv: Int): String =
+        if (rhv > lhv && lhv.toString().length>=2) {
+            MutableList(lhv.toString().length) { "-" }.joinToString(separator = "") + "\n"
+        } else if (i != 0) {
+            try {
+                MutableList(min(tab3, tab2)) { " " }.joinToString(separator = "") +
+                        MutableList(max(ded.toString().length + 1, resid[i - 1].toString().length)) { "-" }.joinToString(separator = "") + "\n"
+            }catch (e:IllegalArgumentException){
+                MutableList(0) { " " }.joinToString(separator = "") +
+                        MutableList(max(ded.toString().length + 1, resid[i - 1].toString().length)) { "-" }.joinToString(separator = "") + "\n"
+            }
+        } else {
+            MutableList(min(tab3, tab2)) { " " }.joinToString(separator = "") +
+                    MutableList(ded.toString().length + 1) { "-" }.joinToString(separator = "") + "\n"
+        }
 
 
 fun printResidual(i: Int, deductibleList: MutableList<Int>,
-                  residualList: MutableList<Int>, lhv: Int, rhv: Int, tab1: Int, tab2: Int, tab3: Int): Pair<String,Int> {
-    var res: Int
+                  residualList: MutableList<Int>, lhv: Int, rhv: Int, tab1: Int, tab2: Int, tab3: Int): Pair<String, Int> {
+    val res: Int
     if (i != deductibleList.size - 1) { //все кроме последнего
         if (i != 0 && deductibleList[i] == residualList[i - 1] ||
                 (i == 0 && lhv.toString().substring(0, deductibleList[0].toString().length).toInt() == deductibleList[0])) //если это первый после черты ноль
         { //когда надо приписать лишний ноль
             return Pair(MutableList(tab1 - 1) { " " }.joinToString(separator = "") +
                     "0" +
-                    residualList[i] + "\n",tab1)
+                    residualList[i] + "\n", tab1)
         } else {
             res = if (deductibleList[i] == 0) { //если вычитаемое было ноль то позицию не меняем
                 tab2
             } else tab1
+
+            if (i == 0 && parseInt(lhv.toString().substring(0,deductibleList[0].toString().length)) < deductibleList[0]){
+                return Pair(MutableList(res+1) { " " }.joinToString(separator = "") +
+                        residualList[i] + "\n", res)
+            }
+
             return Pair(MutableList(res) { " " }.joinToString(separator = "") +
-                    residualList[i] + "\n",res)
+                    residualList[i] + "\n", res)
         }
     } else {//отдельно для последнего
-        return if (lhv <= rhv) { // 0 когда делитель больше делимого
-            Pair(MutableList(tab3 + deductibleList[i].toString().length) { " " }.joinToString(separator = "") +
-                    residualList[i] + "\n",tab1)
+        return if (lhv < rhv && lhv.toString().length>=2) { // 0 когда делитель больше делимого
+            Pair(residualList[i].toString() + "\n", tab1)
+        } else if (lhv == rhv) {
+            Pair(MutableList(tab3+deductibleList[i].toString().length){ " " }.joinToString(separator = "")+ residualList[i].toString() + "\n", tab1)
         } else {
             if (i == 0) { //если был всего лишь один элемент
                 Pair(MutableList(deductibleList[i].toString().length - residualList[i].toString().length + 1) { " " }.joinToString(separator = "") +
-                        residualList[i] + "\n",tab1)
+                        residualList[i] + "\n", tab1)
             } else {
-                Pair(MutableList(residualList[i - 1].toString().length - residualList[i].toString().length + tab2) { " " }.joinToString(separator = "") +
-                        residualList[i] + "\n",tab1)
+                if (parseInt(lhv.toString().substring(0,deductibleList[0].toString().length)) < deductibleList[0]){
+                    Pair(MutableList(lhv.toString().length - residualList[i].toString().length ) { " " }.joinToString(separator = "") +
+                            residualList[i] + "\n", tab1)
+                }else{
+                    Pair(MutableList(lhv.toString().length - residualList[i].toString().length +1) { " " }.joinToString(separator = "") +
+                            residualList[i] + "\n", tab1)
+                }
             }
         }
     }
 }
 
-fun print(lhv: Int,rhv: Int,deductibleList: MutableList<Int>,residualList: MutableList<Int>): String{
+fun print(lhv: Int, rhv: Int, deductibleList: MutableList<Int>, residualList: MutableList<Int>): String {
     val div = lhv.div(rhv)
 
     var tab1 = 1 // расстоение до остатка residualList
@@ -547,7 +679,7 @@ fun print(lhv: Int,rhv: Int,deductibleList: MutableList<Int>,residualList: Mutab
     var str2 = "$rhv\n"
 
 //    если первое вычитаемое меньше по количеству цифр
-    if (parseInt(lhv.toString().substring(0, deductibleList[0].toString().length)) < deductibleList[0]) {
+    if (parseInt(lhv.toString().substring(0, deductibleList[0].toString().length)) < deductibleList[0] || (rhv > lhv && lhv.toString().length >=2)) {
         str1 = "$lhv | "
         str2 = "$rhv\n"
         tab1--
@@ -567,8 +699,8 @@ fun print(lhv: Int,rhv: Int,deductibleList: MutableList<Int>,residualList: Mutab
             tab1 = tab3
         }
 
-        resultString += printDeductible(i, deductibleList[i], str1, div, tab3)
-        resultString += printLine(i, tab3, tab2, deductibleList[i], residualList)
+        resultString += printDeductible(i, deductibleList[i], str1, div, tab3, rhv, lhv)
+        resultString += printLine(i, tab3, tab2, deductibleList[i], residualList, rhv, lhv)
         val k = printResidual(i, deductibleList, residualList, lhv, rhv, tab1, tab2, tab3)
         resultString += k.first
         tab1 = k.second
@@ -578,25 +710,9 @@ fun print(lhv: Int,rhv: Int,deductibleList: MutableList<Int>,residualList: Mutab
     return resultString
 }
 
-fun residual(lhv: Int,rhv: Int,deductibleList: MutableList<Int>): MutableList<Int>{
-    var number = lhv.toString()
-    val residualList = mutableListOf<Int>()
-
-    for (i in 0 until deductibleList.size) {
-        val residual = getResidual(number, deductibleList[i], deductibleList.size - 1, i)
-        if (i != deductibleList.size - 1) {
-            residualList.add(parseInt(residual))
-        }
-        number = residualStr(number, deductibleList[i])
-    }
-    residualList.add(lhv.rem(rhv)) //остаток от деления
-
-    return residualList
-}
-
 fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
     val deductibleList = deductible(lhv.div(rhv), rhv)
-    val residualList = residual(lhv,rhv,deductibleList)
+    val residualList = residual(lhv, rhv, deductibleList)
 
     val inputFile = File(outputName).bufferedWriter()
     inputFile.write(print(lhv, rhv, deductibleList, residualList))
